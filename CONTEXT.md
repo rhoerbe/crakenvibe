@@ -2,6 +2,8 @@
 
 Credential rotation for the gaps SSO doesn't cover: an open connector specification plus a hardware-rooted reference engine that rotates the credentials a user administers. This glossary is the ubiquitous language for the spec, the engine, and the PRD.
 
+Entry style (ISO 27002 pattern): a terse authoritative definition, optionally followed by a _Guidance_ line — plain-language explanation and examples for general IT-security readers. The definition is normative; guidance never contradicts it.
+
 ## Language
 
 ### Credentials & authority
@@ -83,7 +85,8 @@ Bringing a target under management; for web targets, includes the one assisted l
 _Avoid_: onboarding, registration
 
 **Presence gate**:
-The requirement of physical user presence (hardware touch/PIN) before the engine may unwrap secrets for a batch.
+The requirement of physical user presence (hardware touch/PIN) before the engine may decrypt envelope entries for a batch.
+_Guidance_: The touch alone is not an authentication factor — anyone's finger satisfies it. It proves a human is at this machine right now, which is an authorization condition; identity comes from the vault unlock and optional PIN.
 _Avoid_: 2FA, approval
 
 **Attestation**:
@@ -92,9 +95,25 @@ _Avoid_: approval level
 
 ### Disclosure
 
+**Ceremony**:
+The human-facing steps of a disclosure: explicit request naming the credential, fresh presence proof, logged event.
+_Guidance_: In the security-ceremony sense (Ellison): the human is a protocol participant, not an externality. Machine-side duties (decryption timing, erasure) are hygiene, not ceremony.
+_Avoid_: ritual, approval flow
+
 **Disclosure**:
-The ceremonial, per-use materialization of a T2/T3 secret: explicit request naming the credential, fresh presence proof, transient plaintext with zeroization, attested event. All four properties, or it isn't a disclosure.
-_Avoid_: unlock (vault-level), reveal, export
+The controlled use of a T2/T3 secret, combining ceremony with hygiene: decryption only after the presence proof, short-lived plaintext erased (zeroized) after use, conveyed only through a permitted disclosure path.
+_Guidance_: Example: "show my Hetzner password" → touch the YubiKey → CRAKEN decrypts the entry, places it on the hardened clipboard for 20 seconds, wipes it, writes an audit event. Missing any part makes it something else: no bounded lifetime by design = export; hygiene failed at runtime = exposure. (Key-management readers: the decryption step is a key unwrap.)
+_Avoid_: unlock (vault-level), reveal, materialization
+
+**Export**:
+Plaintext egress of a secret with no bounded lifetime — written to a file, printed, or placed on an unmanaged clipboard. Forbidden for T2/T3.
+_Guidance_: Export is a policy violation for high tiers, not a failure: the path never promised erasure. T1 secrets may be exported deliberately (e.g., CSV for a migration), always with an event.
+_Avoid_: backup (that's vault-level), copy
+
+**Exposure**:
+Any occurrence of secret plaintext outside a completed disclosure — a runtime hygiene failure such as a crash before erasure or a captured clipboard. Every exposure raises an alarm event and queues an out-of-cycle rotation of the affected credential.
+_Guidance_: Example: a clipboard manager grabbed the password during the paste window → exposure event → the kraken wakes → rotation of that credential is queued immediately. Rotation is the antidote to the system's own failures.
+_Avoid_: leak (colloquial), breach (org-level)
 
 **Disclosure path**:
 The channel through which disclosed plaintext reaches its consumer: managed session, hardened clipboard, environment injection, extension fill, auto-type, ssh-agent. Tier policy permits paths per tier.
@@ -109,7 +128,7 @@ The clipboard disclosure path with sensitive-flagging, history/cloud-sync exclus
 _Avoid_: copy-paste
 
 **Environment injection**:
-The disclosure path that materializes a secret as an environment variable of exactly one child process.
+The disclosure path that delivers a secret as an environment variable of exactly one child process.
 _Avoid_: env export
 
 **Break-glass disclosure**:

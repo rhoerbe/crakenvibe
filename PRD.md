@@ -57,6 +57,7 @@ Requirements only; the reasoning behind each is in the linked ADR.
 | Passkeys: coexistence, no v1 mechanics; the dormant fallback password is named rotation territory; *passkey* reserved as a future credential family | [0017](docs/adr/0017-passkeys-coexist-fallback-thesis.md) |
 | T2/T3 plaintext materializes only via ceremonial disclosure paths, tier-ranked (T3: managed session only; T2: managed session preferred, hardened clipboard and env injection as fallbacks); root secrets and break-glass accounts disclose break-glass-only, always raising an alarm | [0018](docs/adr/0018-ceremonial-disclosure-paths.md) |
 | TOTP seed custody is a per-target informed choice: none (user-typed codes), escrow (break-glass backup only — phone-loss resilience without factor collapse), or operational (engine-generated codes, evented) | [0019](docs/adr/0019-totp-seed-custody.md) |
+| Plaintext events form a strict taxonomy — disclosure (ceremony + hygiene), export (unbounded egress, forbidden for T2/T3), exposure (runtime hygiene failure); every exposure raises an alarm and queues an out-of-cycle rotation | [0021](docs/adr/0021-exposure-queues-rotation.md) |
 
 ## 5. Coexistence with OS and browser credential stores
 
@@ -76,14 +77,14 @@ Store-by-store requirements:
 - **Browser built-in managers**: no supported external write path (App-Bound Encryption, Apple ACLs, no extension API) → displacement, not synchronization: CSV import with tier suggestions, programmatic disable of browser saving (`privacy.services.passwordSavingEnabled` on Chromium/Firefox; manual on Safari), T1 fill from the live vault via KeePassXC-Browser and mobile KDBX autofill apps; signup/change forms covered by preemption of the browser's suggest-password UI ([ADR-0015](docs/adr/0015-browser-stores-displacement.md)).
 - **Passkeys**: live in these same platform stores; CRAKEN coexists rather than competes — v1 keeps rotating the shared secrets that remain, including the dormant password fallbacks passkeys leave behind ([ADR-0017](docs/adr/0017-passkeys-coexist-fallback-thesis.md)).
 
-Documented honest limit: rotation does not protect the current secret from live in-session malware; for T2/T3 the per-item envelope narrows exposure to per-use windows.
+Documented honest limit: rotation does not protect the current secret from live in-session malware; for T2/T3 the per-item envelope narrows exposure to per-use windows — and any detected exposure queues an out-of-cycle rotation of the affected credential ([ADR-0021](docs/adr/0021-exposure-queues-rotation.md)).
 
 ## 6. Specification scope (v1)
 
 Two documents:
 
 1. **Connector interface**: target enrollment, rotation lifecycle (create–verify–activate–revoke) with write-ahead transactional semantics ([ADR-0006](docs/adr/0006-write-ahead-rotation-protocol.md)), health check, rollback, manifest + signature format, credential-type taxonomy (password, keypair, API token; extensible — *passkey* reserved), and the **replica adapter interface** (push, verify, staleness report). The credential record carries its assurance tier and replica inventory.
-2. **Event schema**: mandatory for every connector and adapter action. The persisted event stream **is** the audit trail; notification (the kraken that wakes up when something goes wrong) is an event consumer. Events carry an `attestation` field recording what authorized the run; replica pushes, staleness, disclosures, and break-glass alarms are first-class event types.
+2. **Event schema**: mandatory for every connector and adapter action. The persisted event stream **is** the audit trail; notification (the kraken that wakes up when something goes wrong) is an event consumer. Events carry an `attestation` field recording what authorized the run; replica pushes, staleness, disclosures, exports, exposures, and break-glass alarms are first-class event types.
 
 Out of the v1 spec: entitlements (declared future extension), trust-root key hierarchy (documented in the reference implementation's security architecture instead).
 
