@@ -8,7 +8,7 @@ Terms are used per [CONTEXT.md](../../CONTEXT.md); decisions per [docs/adr/](../
 
 ## V1 — Capability map
 
-Capabilities structure the spec and roadmap; each maps to spec chapters and engine components. (Whether the capability layer becomes a normative model element kind is an open grilling question.)
+Capabilities structure the spec and roadmap; each maps to spec chapters and engine components. Normative element kind per [ADR-0020](../adr/0020-capability-element-kind.md); boundary rule and sync discipline in [metamodel.md](metamodel.md).
 
 ```mermaid
 flowchart TD
