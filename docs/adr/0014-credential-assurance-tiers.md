@@ -10,6 +10,6 @@ CRAKEN defends two distinct attack scenarios that need different mechanics: leak
 
 ## Consequences
 
-- T2/T3 secrets structurally cannot leak into OS/browser stores — the browser coexistence problem collapses to T1 (ADR-0015).
+- T2/T3 secrets are never stored in or replicated to OS/browser stores — the browser *storage* problem collapses to T1 (ADR-0015). Use-time transit of T2/T3 plaintext does exist and is governed by the ceremonial disclosure paths of ADR-0018.
 - Honest limit, documented: rotation does not protect the *current* secret from live in-session malware; for T2/T3 the per-item envelope narrows exposure to per-use windows.
 - The presence gate of ADR-0003 is the T3 ceremony; tiers generalize it.

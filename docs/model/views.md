@@ -205,4 +205,4 @@ sequenceDiagram
 | T2 high | envelope entry | none | managed session (preferred), hardened clipboard, env injection, extension fill (v1.1+), auto-type (KVM/RDP) | explicit ceremony per use |
 | T3 privileged | envelope entry | none | managed session only; ssh-agent with confirm-per-use for keys | user never sees or handles plaintext |
 
-Recovery codes and other registration-time root secrets: T3, disclosure = break-glass ceremony only (proposed; pending grilling).
+Root secrets (recovery codes, registered authenticators) and break-glass accounts: T3, break-glass disclosure only — full ceremony plus reason capture, alarm event on every use (locked, [ADR-0018](../adr/0018-ceremonial-disclosure-paths.md)).

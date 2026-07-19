@@ -55,6 +55,7 @@ Requirements only; the reasoning behind each is in the linked ADR.
 | Browser password stores are displaced, never written: CSV import wizard, programmatic disable of browser saving, fill served from the live authoritative vault by the ecosystem extension | [0015](docs/adr/0015-browser-stores-displacement.md) |
 | OS keychains are T1-only replica stores; replica inventory, push-after-rotation, and staleness are spec content; replica adapters are subprocess plugins (Secret Service reference adapter in v1) | [0016](docs/adr/0016-os-keychains-replica-adapters.md) |
 | Passkeys: coexistence, no v1 mechanics; the dormant fallback password is named rotation territory; *passkey* reserved as a future credential family | [0017](docs/adr/0017-passkeys-coexist-fallback-thesis.md) |
+| T2/T3 plaintext materializes only via ceremonial disclosure paths, tier-ranked (T3: managed session only; T2: managed session preferred, hardened clipboard and env injection as fallbacks); root secrets and break-glass accounts disclose break-glass-only, always raising an alarm | [0018](docs/adr/0018-ceremonial-disclosure-paths.md) |
 
 ## 5. Coexistence with OS and browser credential stores
 
@@ -63,8 +64,10 @@ Every managed credential typically already exists in several stores at once (vau
 | Tier | Examples | Storage | Disclosure | Replicas & autofill |
 |---|---|---|---|---|
 | **T1 standard** | forums, shopping | plain KDBX entry | vault unlock, as today | replicas pushed to OS keychains where APIs exist; ecosystem autofill; rotation time-bounds leaked copies |
-| **T2 high** | banking, cloud consoles | per-item envelope, hardware-wrapped | one touch per disclosure, transient decrypt | no replicas, no silent autofill; fill/copy only via explicit CRAKEN action |
-| **T3 privileged** | engine admin SSH/API keys; email, IdP, registrar | per-item envelope, stricter policy | engine sessions only; never displayed or exported | never |
+| **T2 high** | banking, cloud consoles | per-item envelope, hardware-wrapped | ceremonial, one touch per use: managed session preferred; hardened clipboard, env injection as fallbacks | no replicas, no silent autofill |
+| **T3 privileged** | engine admin SSH/API keys; email, IdP, registrar | per-item envelope, stricter policy | managed session only (ssh-agent confirm-per-use for keys); user never handles plaintext | never |
+
+A credential is modeled as a **credential set** of secret parts (password, TOTP seed, recovery codes, keys), each with its own policy; authority flows along *issued-by* edges, which makes T3 computable from blast radius. **Root secrets** (recovery codes, registered authenticators) and **break-glass accounts** are T3 with break-glass-only disclosure — every use raises an alarm. The normative tier×path matrix and domain model are in [docs/model/views.md](docs/model/views.md) (V3, V6); ceremony and paths are defined in [ADR-0018](docs/adr/0018-ceremonial-disclosure-paths.md).
 
 Store-by-store requirements:
 
@@ -79,7 +82,7 @@ Documented honest limit: rotation does not protect the current secret from live 
 Two documents:
 
 1. **Connector interface**: target enrollment, rotation lifecycle (create–verify–activate–revoke) with write-ahead transactional semantics ([ADR-0006](docs/adr/0006-write-ahead-rotation-protocol.md)), health check, rollback, manifest + signature format, credential-type taxonomy (password, keypair, API token; extensible — *passkey* reserved), and the **replica adapter interface** (push, verify, staleness report). The credential record carries its assurance tier and replica inventory.
-2. **Event schema**: mandatory for every connector and adapter action. The persisted event stream **is** the audit trail; notification (the kraken that wakes up when something goes wrong) is an event consumer. Events carry an `attestation` field recording what authorized the run; replica pushes and staleness are first-class event types.
+2. **Event schema**: mandatory for every connector and adapter action. The persisted event stream **is** the audit trail; notification (the kraken that wakes up when something goes wrong) is an event consumer. Events carry an `attestation` field recording what authorized the run; replica pushes, staleness, disclosures, and break-glass alarms are first-class event types.
 
 Out of the v1 spec: entitlements (declared future extension), trust-root key hierarchy (documented in the reference implementation's security architecture instead).
 
@@ -119,7 +122,7 @@ Plus one **replica adapter** as spec test vector: FreeDesktop Secret Service (Li
 ## 10. Milestones
 
 - **M0 — walking skeleton + spec v0.1**: repo scaffold; spec drafts (connector protocol, event schema, manifest/signing, replica + tier model); engine runs *one* deterministic connector (Linux password via SSH) end-to-end against a test container with the write-ahead protocol; KDBX round-trip; YubiKey-touch gating in the very first demo — engine admin credentials stored as T3 envelope entries from the start.
-- **M1 — breadth**: all four sampler connectors including the agentic showpiece; queued-batch UX with single-touch execution; signed, hash-chained audit log; T2 disclosure ceremony; Secret Service replica adapter.
+- **M1 — breadth**: all four sampler connectors including the agentic showpiece; queued-batch UX with single-touch execution; signed, hash-chained audit log; ceremonial disclosure v1 paths (managed session, hardened clipboard, environment injection); Secret Service replica adapter.
 - **M2 — public launch**: documentation, uvx packaging, demo video; browser import wizard + guided displacement; spec tagged v1.0-rc only after all four connectors and the reference adapter have validated it.
 
 ## 11. Success criteria (12 months): dogfood → community
