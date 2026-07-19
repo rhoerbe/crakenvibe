@@ -22,6 +22,10 @@ _Avoid_: recovery keys, master key
 An account held exclusively for emergencies and never used in routine operation (local admin for SSO outage, cloud emergency-access admin). Always T3.
 _Avoid_: emergency account, backup admin, root account (unless literally root)
 
+**TOTP escrow**:
+The custody mode where a TOTP seed is stored as a root-secret-style part with break-glass disclosure only — a second-factor backup that survives phone loss; routine codes still come from the user's authenticator.
+_Avoid_: seed backup, 2FA export
+
 **Issued-by**:
 The authority-chain relationship from a credential set to the parent authority able to re-issue it. Blast radius flows along these edges; T3 status is computable from them.
 _Avoid_: parent account, derived from

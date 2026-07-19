@@ -56,6 +56,7 @@ Requirements only; the reasoning behind each is in the linked ADR.
 | OS keychains are T1-only replica stores; replica inventory, push-after-rotation, and staleness are spec content; replica adapters are subprocess plugins (Secret Service reference adapter in v1) | [0016](docs/adr/0016-os-keychains-replica-adapters.md) |
 | Passkeys: coexistence, no v1 mechanics; the dormant fallback password is named rotation territory; *passkey* reserved as a future credential family | [0017](docs/adr/0017-passkeys-coexist-fallback-thesis.md) |
 | T2/T3 plaintext materializes only via ceremonial disclosure paths, tier-ranked (T3: managed session only; T2: managed session preferred, hardened clipboard and env injection as fallbacks); root secrets and break-glass accounts disclose break-glass-only, always raising an alarm | [0018](docs/adr/0018-ceremonial-disclosure-paths.md) |
+| TOTP seed custody is a per-target informed choice: none (user-typed codes), escrow (break-glass backup only — phone-loss resilience without factor collapse), or operational (engine-generated codes, evented) | [0019](docs/adr/0019-totp-seed-custody.md) |
 
 ## 5. Coexistence with OS and browser credential stores
 

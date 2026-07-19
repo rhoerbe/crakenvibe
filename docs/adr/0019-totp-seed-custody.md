@@ -1,0 +1,8 @@
+# TOTP seed custody: none, escrow, or operational — per target
+
+TOTP-protected targets force a custody question: without the seed, every agentic rotation and managed-session login needs a hand-typed code (viable in v1's presence-gated model — the user is there); with it, the engine automates fully but collapses the service's two factors into one envelope, the effective second factor becoming the YubiKey touch. A second reality cuts the other way: phone migration and loss are a leading cause of self-inflicted 2FA lockout, so a vault-held seed is also a resilience asset. Custody is therefore a per-target choice among three modes, presented with implications at enrollment: **none** — user supplies codes from their own authenticator (default if declined); **escrow** — the seed, captured at the QR moment when it is visible anyway, is stored as a root-secret-style part with break-glass disclosure only: no routine code generation, no factor collapse in use, but phone loss stops being a lockout (recommended default offer); **operational** — the engine generates codes for agentic rotation and managed sessions; factor collapse accepted, and every engine-generated code is recorded in the event stream. Future connector operation: TOTP re-enrollment — rotating the second factor itself.
+
+## Considered Options
+
+- **Always hold seeds**: one consistent flow, systematic silent factor collapse — the reviewer's opening objection.
+- **Never hold seeds**: purist, but permanently manual for exactly the targets that matter most, and it forecloses unattended mode (v1.1+) with no per-target escape hatch — while also forfeiting the phone-migration resilience users actually lose sleep over.
