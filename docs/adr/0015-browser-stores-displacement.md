@@ -1,0 +1,9 @@
+# Browser password stores: displace, never write
+
+Users hold existing credentials in browser stores whose save/fill UX beats vault ecosystems out of the box, and rotation makes those copies stale and dangerous (autofill retries with dead passwords). Cascading updates or deletions into browser stores is rejected permanently because no supported write path exists: Chrome/Edge expose no external or extension API and are actively locking their stores behind App-Bound Encryption; Safari's items are Apple-ACL'd; Firefox's files are writable only via unsupported formats. The strategy is **displacement**: user-driven CSV export (the one supported egress every browser has) → tiered import wizard with dedupe → programmatic disable of the browser's own saving via `privacy.services.passwordSavingEnabled` (Chrome/Firefox; Safari stays a manual instruction) → T1 fill served from the live authoritative KDBX by KeePassXC-Browser on desktop and KDBX autofill apps on mobile. No copy exists, so no staleness can. Signup and password-change forms are covered by preemption: the ecosystem extension detects `autocomplete="new-password"` signals and offers generation before the browser does, so new credentials are born in the vault and then enrolled as rotation targets.
+
+## Considered Options
+
+- **Best-effort write connectors** (Firefox first): an unsupported-format arms race Chrome has already declared war on, inconsistent across the browsers users actually run.
+- **Agentic re-login in the daily browser** to trigger the native "update password?" prompt — the only vendor-supported update mechanism, but it reverses ADR-0008's isolation, doubles agentic volume, needs a click per site, and browser sync then propagates secrets to stores we don't control.
+- **Tolerate + warn**: zero build; autofill keeps typing dead passwords — the lockout generator that makes users hate rotation.
