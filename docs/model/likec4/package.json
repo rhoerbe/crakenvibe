@@ -1,0 +1,8 @@
+{
+  "name": "craken-architecture",
+  "private": true,
+  "description": "LikeC4 semantic model for the CRAKEN architectural description (ADR-0020, lobotom-y ADR-0042 pattern)",
+  "devDependencies": {
+    "likec4": "^1.58.0"
+  }
+}

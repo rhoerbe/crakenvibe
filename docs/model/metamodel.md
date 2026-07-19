@@ -4,7 +4,7 @@ Adapted from the lobotom-y metamodel (`docs/architecture/metamodel.md` there), e
 
 ## Notation status
 
-Target state is the two-layer principle: a LikeC4 semantic model (elements, relationships — zero geometry) plus per-view layout snapshots, with PlantUML for behavior below the C4 floor. Adoption is **pending the lobotom-y ADR-0042 pilot verdict**. Until then, [views.md](views.md) holds Mermaid drafts that are temporarily authoritative for both semantics and layout — an accepted violation, written to port 1:1.
+The two-layer principle is **adopted** (lobotom-y ADR-0042: accepted, pilot passed 2026-07-12): the LikeC4 semantic model lives in [likec4/](likec4/) (`metamodel.c4` = machine-readable half of this document, `model.c4`, `views.c4`), human layout snapshots in `likec4/.likec4/*.snap` (committed; drag in the VSCode extension), PNGs exported via `scripts/render-diagrams.sh`. Behavioral/detail views (sequence, state, class) are PlantUML rendered to SVG by the same script. [views.md](views.md) is embedding markdown only. Toolchain: Node ≥ 22.22.3 at `~/.local/node22`, podman for PlantUML. CI drift gate (`likec4 validate`) is deferred until CI exists. The earlier Mermaid drafts are retired.
 
 ## Authority boundaries
 

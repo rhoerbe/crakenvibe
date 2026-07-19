@@ -1,0 +1,36 @@
+@startuml
+' V5 — Ceremonial disclosure via managed session (T3 example: Proxmox).
+' Ceremony = explicit request + fresh presence proof + logged event;
+' hygiene = decryption after proof, short-lived plaintext, permitted path
+' (ADR-0018/0021).
+!include style.iuml
+
+actor "SOHO admin" as U
+participant "Engine\n(ceremony service)" as E
+participant "YubiKey" as Y
+participant "Rotation profile\n(browser)" as P
+participant "Proxmox web UI" as T
+
+U -> E : open proxmox (launch request)
+E -> U : request presence
+U -> Y : touch
+Y --> E : decrypt envelope entry (PIV)
+E -> P : launch profile, navigate to target
+E -> P : inject username + password\n(CDP recipe, no LLM)
+opt TOTP second factor
+  E -> P : inject code (engine-held seed,\noperational custody only)
+  note over U, P
+    or the user types the code
+    from their own authenticator
+  end note
+end
+P -> T : submit login
+T --> P : authenticated session
+E -> E : zeroize plaintext;\nemit disclosure event (presence)
+E --> U : hand over authenticated window
+
+note over P
+  saving + sync hard-disabled;
+  session cookie stays isolated
+end note
+@enduml

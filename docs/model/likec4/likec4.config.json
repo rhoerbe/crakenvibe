@@ -1,0 +1,5 @@
+{
+  "name": "craken-architecture",
+  "title": "CRAKEN Architectural Description",
+  "exclude": ["**/node_modules/**"]
+}

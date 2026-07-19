@@ -50,6 +50,10 @@ _Avoid_: master vault, primary store, database
 A T2/T3 secret part individually encrypted to a touch-policy hardware key; opaque to plain KeePassXC.
 _Avoid_: wrapped blob, sealed secret
 
+**Envelope store**:
+The engine-managed store holding all envelope entries.
+_Avoid_: key store, secure store
+
 **Replica**:
 A convenience copy of a T1 credential in a login-unlocked OS store, created and updated only by a replica adapter.
 _Avoid_: copy, cache, mirror, sync target

@@ -1,0 +1,105 @@
+// Views — small scoped projections of the one model. Compactness comes from
+// scoping here + the human layout pass in the VSCode editor (snapshots under
+// .likec4/, committed). Status legend lives in the embedding markdown.
+
+views {
+
+  view context {
+    title 'CRAKEN — Context'
+    include sohoAdmin, yubikey, targets, llm, ecosystem, osKeychain
+    include craken
+
+    style element.tag = #third-party {
+      color deferred-fill
+    }
+
+    autoLayout TopBottom
+  }
+
+  view rotation {
+    title 'CRAKEN — Rotation flow'
+    include craken.engineCore, craken.vault, craken.eventLog
+    include craken.connectors, craken.agentic, craken.rotProfile
+    include targets, llm
+
+    style element.tag = #proposed {
+      color proposed-fill
+    }
+    style element.tag = #third-party {
+      color deferred-fill
+    }
+
+    autoLayout LeftRight
+  }
+
+  view disclosure {
+    title 'CRAKEN — Disclosure & assurance'
+    include sohoAdmin, yubikey
+    include craken.ceremony, craken.envelopeStore, craken.rotProfile, craken.eventLog
+    include targets
+
+    style element.tag = #proposed {
+      color proposed-fill
+    }
+    style element.tag = #third-party {
+      color deferred-fill
+    }
+
+    autoLayout TopBottom
+  }
+
+  view coexistence {
+    title 'CRAKEN — Store coexistence'
+    include sohoAdmin
+    include craken.vault, craken.engineCore, craken.replicaAdapter
+    include ecosystem, osKeychain, browserStore
+
+    style element.tag = #proposed {
+      color proposed-fill
+    }
+    style element.tag = #third-party {
+      color deferred-fill
+    }
+
+    autoLayout LeftRight
+  }
+
+  view capabilities {
+    title 'CRAKEN — Capability map'
+    include caps
+    include caps.** where kind is capability
+
+    style element.tag = #v1 {
+      color v1-fill
+    }
+    style element.tag = #v1-1 {
+      color v1-1-fill
+    }
+    style element.tag = #v2 {
+      color v2-fill
+    }
+    style element.tag = #parked {
+      color parked-fill
+    }
+
+    autoLayout TopBottom
+  }
+
+  view traceability {
+    title 'CRAKEN — Component -> capability traceability'
+    include craken.** where kind is component
+    include caps.* where kind is capability
+
+    style element.tag = #proposed {
+      color proposed-fill
+    }
+    style element.tag = #v1 {
+      color v1-fill
+    }
+    style element.tag = #v2 {
+      color v2-fill
+    }
+
+    autoLayout LeftRight
+  }
+}

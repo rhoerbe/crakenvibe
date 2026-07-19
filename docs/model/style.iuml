@@ -1,0 +1,133 @@
+' style.iuml — shared PlantUML include for docs/architecture/*.puml
+'
+' Usage: !include style.iuml
+' Then tag any element with <<built>>, <<partial>>, <<proposed>>, or <<deferred>>
+' to pick up the status coloring. Call StatusLegend() to render the legend.
+'
+' Colors are the Okabe-Ito colorblind-safe palette, chosen for readability against
+' a white background (this file assumes light-mode rendering only).
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam defaultFontName sans-serif
+skinparam defaultFontSize 12
+skinparam arrowColor #333333
+skinparam arrowFontColor #333333
+
+skinparam ArrowThickness 1.2
+
+skinparam class {
+  BorderColor #333333
+  FontColor #1a1a1a
+}
+skinparam component {
+  BorderColor #333333
+  FontColor #1a1a1a
+}
+skinparam usecase {
+  BorderColor #333333
+  FontColor #1a1a1a
+}
+skinparam actor {
+  BorderColor #333333
+  FontColor #1a1a1a
+}
+skinparam state {
+  BorderColor #333333
+  FontColor #1a1a1a
+}
+skinparam node {
+  BorderColor #333333
+  FontColor #1a1a1a
+}
+skinparam database {
+  BorderColor #333333
+  FontColor #1a1a1a
+}
+
+' --- Status palette (Okabe-Ito, colorblind-safe) ---
+!$STATUS_BUILT_COLOR = "#009E73"
+!$STATUS_PARTIAL_COLOR = "#E69F00"
+!$STATUS_PROPOSED_COLOR = "#56B4E9"
+!$STATUS_DEFERRED_COLOR = "#999999"
+
+skinparam class<<built>> {
+  BackgroundColor #D6F2E9
+  BorderColor $STATUS_BUILT_COLOR
+}
+skinparam class<<partial>> {
+  BackgroundColor #FBEACC
+  BorderColor $STATUS_PARTIAL_COLOR
+}
+skinparam class<<proposed>> {
+  BackgroundColor #DAF0FA
+  BorderColor $STATUS_PROPOSED_COLOR
+}
+skinparam class<<deferred>> {
+  BackgroundColor #E8E8E8
+  BorderColor $STATUS_DEFERRED_COLOR
+}
+
+skinparam component<<built>> {
+  BackgroundColor #D6F2E9
+  BorderColor $STATUS_BUILT_COLOR
+}
+skinparam component<<partial>> {
+  BackgroundColor #FBEACC
+  BorderColor $STATUS_PARTIAL_COLOR
+}
+skinparam component<<proposed>> {
+  BackgroundColor #DAF0FA
+  BorderColor $STATUS_PROPOSED_COLOR
+}
+skinparam component<<deferred>> {
+  BackgroundColor #E8E8E8
+  BorderColor $STATUS_DEFERRED_COLOR
+}
+
+skinparam usecase<<built>> {
+  BackgroundColor #D6F2E9
+  BorderColor $STATUS_BUILT_COLOR
+}
+skinparam usecase<<partial>> {
+  BackgroundColor #FBEACC
+  BorderColor $STATUS_PARTIAL_COLOR
+}
+skinparam usecase<<proposed>> {
+  BackgroundColor #DAF0FA
+  BorderColor $STATUS_PROPOSED_COLOR
+}
+skinparam usecase<<deferred>> {
+  BackgroundColor #E8E8E8
+  BorderColor $STATUS_DEFERRED_COLOR
+}
+
+skinparam state<<built>> {
+  BackgroundColor #D6F2E9
+  BorderColor $STATUS_BUILT_COLOR
+}
+skinparam state<<partial>> {
+  BackgroundColor #FBEACC
+  BorderColor $STATUS_PARTIAL_COLOR
+}
+skinparam state<<proposed>> {
+  BackgroundColor #DAF0FA
+  BorderColor $STATUS_PROPOSED_COLOR
+}
+skinparam state<<deferred>> {
+  BackgroundColor #E8E8E8
+  BorderColor $STATUS_DEFERRED_COLOR
+}
+
+' Renders the status legend as a small table. Call from any diagram that uses
+' the status tags, typically near the bottom.
+!procedure StatusLegend()
+legend right
+  |= tag |= meaning | Color |
+  |<back:#D6F2E9>   </back>| built | implemented and verified |
+  |<back:#FBEACC>   </back>| partial | implemented, incomplete/unenforced |
+  |<back:#DAF0FA>   </back>| proposed | designed, not yet implemented |
+  |<back:#E8E8E8>   </back>| deferred | acknowledged, out of scope for now |
+endlegend
+!endprocedure

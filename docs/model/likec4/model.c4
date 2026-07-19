@@ -1,0 +1,158 @@
+// Semantic model — elements + relationships. Names follow the iron naming rule:
+// domain-element titles use CONTEXT.md terms exactly. All CRAKEN components are
+// #proposed (zero code yet); roadmap staging is carried by capability tags.
+
+model {
+
+  // --- actors ---
+  sohoAdmin = actor 'SOHO admin'
+
+  // --- hardware ---
+  yubikey = node 'YubiKey (PIV, touch policy)' {
+    #third-party
+  }
+
+  // --- external systems & stores ---
+  targets = system 'Targets (SSH, API, web UI)' {
+    #third-party
+    description 'Systems holding accounts CRAKEN manages: Linux hosts, GitHub/AWS, Proxmox, firewalls, SaaS'
+  }
+  llm = system 'LLM backend (pluggable)' {
+    #third-party
+    description 'Cloud default, local supported; receives placeholders and redacted DOM only (ADR-0007)'
+  }
+  ecosystem = system 'KeePassXC + browser extension' {
+    #third-party
+    description 'Reads T1 entries from the authoritative store; serves autofill; envelope entries are opaque to it'
+  }
+  osKeychain = datastore 'OS keychain' {
+    #third-party
+    description 'Secret Service / macOS Keychain / Windows Credential Manager — login-unlocked T1 replica stores (ADR-0016)'
+  }
+  browserStore = datastore 'Browser password store' {
+    #third-party
+    description 'Displacement source only: CSV import, then disabled; never written (ADR-0015)'
+  }
+
+  // --- the system in focus ---
+  craken = system 'CRAKEN' {
+
+    engineCore = component 'Rotation core' {
+      #proposed
+      description 'Batch planner + write-ahead rotation protocol (ADR-0006); orchestrates connectors and adapters'
+    }
+    ceremony = component 'Ceremony service' {
+      #proposed
+      description 'Presence gate, disclosures incl. break-glass, TOTP custody (ADR-0018/0019)'
+    }
+    agentic = component 'Agentic executor' {
+      #proposed
+      description 'Interpreter-connector executing playbooks; placeholder injection, redaction (ADR-0001/0007)'
+    }
+    connectors = component 'Connectors' {
+      #proposed
+      description 'Subprocess JSON-RPC plugins: SSH keypair, Linux password, API token (ADR-0005)'
+    }
+    replicaAdapter = component 'Replica adapter' {
+      #proposed
+      description 'Secret Service reference adapter: push-after-rotation, staleness (ADR-0016)'
+    }
+    rotProfile = component 'Rotation browser profile' {
+      #proposed
+      description 'Dedicated, persistent, headful; saving + sync hard-disabled (ADR-0008)'
+    }
+    vault = datastore 'Authoritative store' {
+      #proposed
+      description 'KDBX file; T1 plain entries; current truth of every managed credential (ADR-0002)'
+    }
+    envelopeStore = datastore 'Envelope store' {
+      #proposed
+      description 'T2/T3 envelope entries, individually encrypted to the YubiKey PIV key (ADR-0014)'
+    }
+    eventLog = datastore 'Event log' {
+      #proposed
+      description 'Hash-chained, hardware-signed; audit trail and notification feed (ADR-0003)'
+    }
+  }
+
+  // --- capabilities (ADR-0020; roadmap tags = PRD staging) ---
+  caps = capability 'CRAKEN capabilities' {
+
+    capLifecycle = capability 'Credential lifecycle' {
+      #v1
+      description 'Enroll, rotate (write-ahead), verify-activate, retire'
+    }
+    capAssurance = capability 'Assurance' {
+      #v1
+      description 'Presence gate, envelope, attestation'
+    }
+    capDisclosure = capability 'Disclosure' {
+      #v1
+      description 'Ceremony + hygiene; taxonomy disclosure/export/exposure (ADR-0018/0021)'
+
+      capManagedSession = capability 'Managed session' {
+        #v1
+      }
+      capClipboard = capability 'Hardened clipboard' {
+        #v1
+      }
+      capEnvInjection = capability 'Environment injection' {
+        #v1
+      }
+      capExtFill = capability 'Extension fill' {
+        #v1-1
+      }
+      capAutoType = capability 'Auto-type' {
+        #v1-1
+      }
+    }
+    capReplication = capability 'Replication' {
+      #v1
+      description 'Secret Service push in v1; macOS/Windows adapters v1.1+'
+    }
+    capDisplacement = capability 'Displacement' {
+      #v1
+      description 'Browser import wizard, disable browser saving, preemption (M2)'
+    }
+    capObservability = capability 'Observability' {
+      #v1
+      description 'Signed audit trail; notification — the kraken'
+    }
+    capLaunchPad = capability 'Launch pad' {
+      #v2
+      description 'Connection launcher reusing managed sessions'
+    }
+    capPasskeyUpgrade = capability 'Passkey upgrade' {
+      #v2
+      description 'Enroll passkey, then rotate/neutralize the password fallback (ADR-0017)'
+    }
+  }
+
+  // --- uses relationships ---
+  sohoAdmin -> ceremony 'approves batches, answers 2FA'
+  ceremony -> yubikey 'touch / PIN'
+  ceremony -> envelopeStore 'decrypts envelope entries'
+  ceremony -> rotProfile 'starts managed sessions'
+  engineCore -> vault 'reads / writes T1, write-ahead journal'
+  engineCore -> connectors 'JSON-RPC over stdio'
+  engineCore -> replicaAdapter 'push after rotation'
+  engineCore -> eventLog 'emits events'
+  engineCore -> browserStore 'one-time CSV import (displacement)'
+  connectors -> targets 'rotate credentials'
+  agentic -> rotProfile 'drives browser'
+  agentic -> llm 'placeholders + redacted DOM'
+  rotProfile -> targets 'web login / rotation'
+  replicaAdapter -> osKeychain 'T1 replicas, staleness'
+  ecosystem -> vault 'reads T1, serves autofill'
+
+  // --- realizes (component -> capability) ---
+  engineCore -[realizes]-> capLifecycle
+  connectors -[realizes]-> capLifecycle
+  agentic -[realizes]-> capLifecycle
+  ceremony -[realizes]-> capAssurance
+  ceremony -[realizes]-> capDisclosure
+  rotProfile -[realizes]-> capManagedSession
+  replicaAdapter -[realizes]-> capReplication
+  engineCore -[realizes]-> capDisplacement
+  eventLog -[realizes]-> capObservability
+}

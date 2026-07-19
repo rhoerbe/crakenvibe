@@ -1,0 +1,26 @@
+@startuml
+' V4 — Secret rotation lifecycle (write-ahead protocol, ADR-0006).
+' Replica sub-lifecycle (T1 only): in-sync -> stale on rotation commit;
+' stale -> in-sync on adapter push (events feed notification).
+!include style.iuml
+
+[*] --> Active
+Active --> PendingStaged : batch planned;\nnew secret persisted (write-ahead)
+PendingStaged --> Applied : connector set on target
+PendingStaged --> Active : abort before apply;\ndiscard pending
+Applied --> Verified : authenticated with new secret
+Applied --> RollbackAttempt : verify failed
+RollbackAttempt --> Active : old secret restored\nor still valid
+RollbackAttempt --> Conflicted : manual intervention;\nboth secrets uncertain
+Verified --> Active : new secret active;\nold retained
+Active --> Retired : old secret revoked\nafter grace period
+
+note right of PendingStaged
+  lockout-safe: vault holds
+  both values until verified
+end note
+note right of Conflicted
+  alarm event —
+  the kraken wakes
+end note
+@enduml

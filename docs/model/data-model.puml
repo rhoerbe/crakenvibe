@@ -1,0 +1,69 @@
+@startuml
+' V3 — Domain class model (below the C4 floor). Terms per CONTEXT.md.
+' The three policy-typed association families — rests-in, replicated-as,
+' disclosed-via — are each constrained by Tier (normative pair with the
+' tier policy matrix V6 in views.md).
+!include style.iuml
+hide empty members
+
+class CredentialSet {
+  account
+  tier
+}
+class SecretPart {
+  kind : password | totp-seed | recovery-codes | keypair | api-token
+  restForm : plain | envelope
+}
+class Tier {
+  restForm policy
+  replication policy
+  allowed transit paths
+}
+abstract class Store
+class AuthoritativeStore
+class EnvelopeStore
+class OSKeychain
+class BrowserStore
+class Replica {
+  state : in-sync | stale
+}
+class DisclosurePath {
+  kind : managed-session | clipboard |\n env-inject | ext-fill | auto-type | ssh-agent
+}
+class Disclosure {
+  attestation
+  ttl
+}
+class Target
+class RotationEvent
+
+CredentialSet "1" *-- "1..*" SecretPart : consists of
+CredentialSet --> Tier : classified as
+CredentialSet --> Target : authenticates to
+CredentialSet --> CredentialSet : issued-by
+SecretPart --> Store : rests in
+Store <|-- AuthoritativeStore
+Store <|-- EnvelopeStore
+Store <|-- OSKeychain
+Store <|-- BrowserStore
+SecretPart "1" --> "0..*" Replica : replicated as
+Replica --> OSKeychain : lives in
+Disclosure --> SecretPart : decrypts
+Disclosure --> DisclosurePath : via
+Tier ..> DisclosurePath : permits
+Tier ..> Replica : forbids above T1
+Disclosure --> RotationEvent : emits
+
+note bottom of BrowserStore
+  displacement source only:
+  imported once, then disabled;
+  never a rest or replica store (ADR-0015)
+end note
+note right of CredentialSet
+  issued-by = authority chain:
+  self-provisioned sets root in
+  root secrets (recovery codes);
+  delegated sets point to the parent.
+  T3 is computable from these edges.
+end note
+@enduml

@@ -1,201 +1,64 @@
-# CRAKEN — Model Views (draft)
+# CRAKEN — Model Views
 
-*Draft views for the design grilling, 2026-07-19. Notation: Mermaid throughout (renders natively on GitHub, zero toolchain). The durable architecture-description tooling (LikeC4 semantic model + layout snapshots, PlantUML for behavior — per the lobotom-y metamodel) is a pending adoption decision; these drafts are written to port 1:1 when that lands. Status tags follow the lobotom-y vocabulary: `v1` (committed), `v1.1+`, `v2`, `parked`.*
+*Two-layer architecture description per [metamodel.md](metamodel.md) (lobotom-y ADR-0042 pattern): structural views live in the LikeC4 semantic model under [likec4/](likec4/) (agent-owned `*.c4`; human-owned layout snapshots under `likec4/.likec4/`), behavioral/detail views in PlantUML (`*.puml`). All images are derived — regenerate with `scripts/render-diagrams.sh`; never edit them.*
 
-Terms are used per [CONTEXT.md](../../CONTEXT.md); decisions per [docs/adr/](../adr/).
+**Layout pass (human):** open `docs/model/likec4/` in VSCode with the LikeC4 extension, open a view preview, click **Edit** in the diagram toolbar (dragging in read-only mode only pans), drag nodes, save — a `.likec4/<view>.likec4.snap` sidecar appears; commit it. Model edits afterwards keep your positions; re-sync on the editor's drift indicator. Until a view has its snapshot, exports use auto-layout.
+
+**Tag legend** — status: `built` implemented+verified · `partial` incomplete · `proposed` designed, not implemented · `deferred` out of scope for now · `third-party` not ours. Roadmap (capabilities): `v1` · `v1-1` (= v1.1+) · `v2` · `parked`. All CRAKEN components are currently `proposed` — the repo has no code yet.
+
+Terms per [CONTEXT.md](../../CONTEXT.md); decisions per [docs/adr/](../adr/).
 
 ---
 
-## V1 — Capability map
+## V1 — Capability map (LikeC4: `capabilities`)
 
-Capabilities structure the spec and roadmap; each maps to spec chapters and engine components. Normative element kind per [ADR-0020](../adr/0020-capability-element-kind.md); boundary rule and sync discipline in [metamodel.md](metamodel.md).
+Normative element kind per [ADR-0020](../adr/0020-capability-element-kind.md); roadmap tags carry PRD staging.
 
-```mermaid
-flowchart TD
-    subgraph CL["Credential Lifecycle [v1]"]
-        ENR[Enroll target]
-        ROT[Rotate - write-ahead]
-        VER[Verify and activate]
-        RET[Retire old secret]
-    end
-    subgraph AS["Assurance [v1]"]
-        PG[Presence gate]
-        ENV[Envelope T2 and T3]
-        ATT[Attestation]
-    end
-    subgraph DI["Disclosure [v1 partial]"]
-        MS["Managed session [v1]"]
-        HC["Hardened clipboard [v1]"]
-        EI["Env injection [v1.1]"]
-        EF["Extension fill [v1.1+]"]
-        AT["Auto-type [v1.1+]"]
-    end
-    subgraph RE["Replication [v1 partial]"]
-        PUSH["Push to OS keychain [v1: Secret Service]"]
-        STAL[Staleness tracking]
-    end
-    subgraph DP["Displacement [M2]"]
-        IMP[Import from browser]
-        DIS[Disable browser saving]
-        PRE[Preempt new-password forms]
-    end
-    subgraph OB["Observability [v1]"]
-        AUD[Signed audit trail]
-        NOT[Notification - the kraken]
-    end
-    LP["Launch pad [v2]"]
-    CL --> AS
-    DI --> AS
-    RE --> CL
-    OB --> CL
-    LP -.reuses.-> MS
-```
+![Capability map](likec4/export/capabilities.png)
 
-## V2 — Container view (C4 level 2, simplified)
+## V2 — Structural views (LikeC4)
 
-```mermaid
-flowchart LR
-    USER([SOHO admin])
-    YK[/YubiKey - PIV touch policy/]
-    subgraph ENGINE["CRAKEN engine [v1, Python]"]
-        CORE[Batch planner and rotation core]
-        CER[Ceremony service - presence gate, disclosure]
-        EVT[Event log - hash chain]
-    end
-    KDBX[(Authoritative vault - KDBX, T1 plain)]
-    ENVS[(Envelope store - T2 T3 wrapped)]
-    PROF[Rotation browser profile - headful, saving disabled]
-    CONN[Connectors - subprocess JSON-RPC]
-    AGX[Agentic executor - interpreter-connector]
-    RADP["Replica adapter - Secret Service [v1]"]
-    OSK[(OS keychain - T1 replicas)]
-    LLM[LLM backend - pluggable, cloud default]
-    TGT[Targets - SSH, API, web UI]
-    ECO["KeePassXC + browser extension [third-party]"]
+Four small scoped projections of the one model replace the former single container diagram — compactness by scoping, then by the layout pass.
 
-    USER --> CER
-    CER --> YK
-    CORE --> KDBX
-    CER --> ENVS
-    CORE --> CONN
-    CONN --> TGT
-    AGX --> PROF
-    PROF --> TGT
-    AGX --> LLM
-    CORE --> RADP
-    RADP --> OSK
-    CORE --> EVT
-    ECO --> KDBX
-    CER --> PROF
-```
+### Context
+
+![Context](likec4/export/context.png)
+
+### Rotation flow
+
+![Rotation flow](likec4/export/rotation.png)
+
+### Disclosure & assurance
+
+![Disclosure and assurance](likec4/export/disclosure.png)
+
+### Store coexistence
+
+![Store coexistence](likec4/export/coexistence.png)
+
+### Component → capability traceability
+
+![Traceability](likec4/export/traceability.png)
 
 Trust-boundary notes: secrets cross engine↔connector via stdio pipe only; the LLM backend receives placeholders and redacted DOM, never secrets; the ecosystem (KeePassXC + extension) reads T1 only — envelope entries are opaque to it.
 
-## V3 — Domain class model (below the C4 floor)
+## V3 — Domain class model (PlantUML: [data-model.puml](data-model.puml))
 
-The three policy-typed relationship families — **rest** (SecretPart→Store), **replication** (SecretPart→Replica), **transit** (Disclosure→DisclosurePath) — are each constrained by the credential set's Tier. That is the modeling answer to "how do we model storage, replication policy and transit path": tier as a policy object typing three association families, enforced at runtime and asserted in the spec.
+The three policy-typed association families — **rests-in**, **replicated-as**, **disclosed-via** — are each constrained by the Tier policy object. Normative pair with the V6 matrix below (sync rule 2).
 
-```mermaid
-classDiagram
-    class CredentialSet {
-        account
-        tier
-    }
-    class SecretPart {
-        kind: password, totp-seed, recovery-codes, keypair, api-token
-        restForm: plain or envelope
-    }
-    class Tier {
-        restForm policy
-        replication policy
-        allowed transit paths
-    }
-    class Store
-    class AuthoritativeVault
-    class EnvelopeStore
-    class OSKeychain
-    class BrowserStore
-    class Replica {
-        state: in-sync or stale
-    }
-    class DisclosurePath {
-        kind: managed-session, clipboard, env-inject, ext-fill, auto-type, ssh-agent
-    }
-    class Disclosure {
-        attestation
-        ttl
-    }
-    class Target
-    class RotationEvent
+![Domain class model](data-model.svg)
 
-    CredentialSet "1" *-- "1..*" SecretPart : consists of
-    CredentialSet --> Tier : classified as
-    CredentialSet --> Target : authenticates to
-    CredentialSet --> CredentialSet : issued-by
-    SecretPart --> Store : rests in
-    Store <|-- AuthoritativeVault
-    Store <|-- EnvelopeStore
-    Store <|-- OSKeychain
-    Store <|-- BrowserStore
-    SecretPart "1" --> "0..*" Replica : replicated as
-    Replica --> OSKeychain : lives in
-    Disclosure --> SecretPart : materializes
-    Disclosure --> DisclosurePath : via
-    Tier ..> DisclosurePath : permits
-    Tier ..> Replica : forbids above T1
-    Disclosure --> RotationEvent : emits
-```
+## V4 — Secret rotation lifecycle (PlantUML: [lifecycle.puml](lifecycle.puml))
 
-Notes:
-- **BrowserStore** appears only as a displacement source (import) — never a rest or replica store (ADR-0015).
-- **`issued-by`** models the authority chain: self-provisioned sets root in registration-time secrets (recovery codes, registered authenticator — the true T3 of the set); delegated credentials (enterprise-provisioned accounts, PATs) point to the parent credential that can re-issue them. Blast radius flows along `issued-by` edges; T3 = a node with inbound `issued-by` edges from other sets.
-- **MFA artifacts are SecretParts**, not separate credentials: a TOTP seed or recovery-code block belongs to the set, with its own restForm and (potentially stricter) disclosure policy.
+Write-ahead protocol per [ADR-0006](../adr/0006-write-ahead-rotation-protocol.md). Replica sub-lifecycle (T1 only): `in-sync → stale` on rotation commit; `stale → in-sync` on adapter push.
 
-## V4 — Secret rotation lifecycle (state machine)
+![Rotation lifecycle](lifecycle.svg)
 
-```mermaid
-stateDiagram-v2
-    [*] --> Active
-    Active --> PendingStaged : batch planned, new secret persisted write-ahead
-    PendingStaged --> Applied : connector set on target
-    PendingStaged --> Active : abort before apply, discard pending
-    Applied --> Verified : authenticated with new secret
-    Applied --> RollbackAttempt : verify failed
-    RollbackAttempt --> Active : old secret restored or still valid
-    RollbackAttempt --> Conflicted : manual intervention, both secrets uncertain
-    Verified --> Active : new secret active, old retained
-    Active --> Retired : old secret revoked after grace
-    note right of PendingStaged : lockout-safe, vault holds both values
-    note right of Conflicted : alarm event, the kraken wakes
-```
+## V5 — Ceremonial disclosure via managed session (PlantUML: [seq-managed-session.puml](seq-managed-session.puml))
 
-Replica sub-lifecycle (per replica, T1 only): `in-sync → stale` on rotation commit; `stale → in-sync` on adapter push; staleness emits events consumed by notification.
+T3 example: Proxmox. Ceremony + hygiene per [ADR-0018](../adr/0018-ceremonial-disclosure-paths.md)/[0021](../adr/0021-exposure-queues-rotation.md).
 
-## V5 — Ceremonial disclosure via managed session (sequence, T3 example: Proxmox)
-
-```mermaid
-sequenceDiagram
-    actor U as SOHO admin
-    participant E as Engine (ceremony svc)
-    participant Y as YubiKey
-    participant P as Rotation profile (browser)
-    participant T as Proxmox web UI
-    U->>E: open proxmox (launch request)
-    E->>U: request presence
-    U->>Y: touch
-    Y-->>E: unwrap envelope entry (PIV decrypt)
-    E->>P: launch profile, navigate to target
-    E->>P: inject username and password (CDP recipe, no LLM)
-    opt TOTP second factor
-        E->>P: inject code (engine-held seed)
-        Note over U,P: or user types code from own authenticator
-    end
-    P->>T: submit login
-    T-->>P: authenticated session
-    E->>E: zeroize plaintext, emit disclosure event (attestation: presence)
-    E-->>U: hand over authenticated window
-    Note over P: profile has saving and sync hard-disabled, session cookie stays isolated
-```
+![Managed session sequence](seq-managed-session.svg)
 
 ## V6 — Tier policy matrix (the normative table behind V3)
 

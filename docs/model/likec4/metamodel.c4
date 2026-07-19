@@ -1,0 +1,88 @@
+// Machine-readable half of docs/model/metamodel.md — the two must not drift
+// (sync rule 1). Element kinds per metamodel.md incl. the capability lens
+// (ADR-0020). Status tags + Okabe-Ito palette follow the lobotom-y conventions;
+// roadmap tags carry the PRD staging vocabulary (v1 | v1.1+ | v2 | parked —
+// tag identifiers use v1-1 for "v1.1+").
+
+specification {
+
+  element actor {
+    style {
+      shape person
+    }
+  }
+  element system
+  element node {
+    style {
+      color gray
+      opacity 10%
+    }
+  }
+  element component
+  element datastore {
+    style {
+      shape storage
+    }
+  }
+  element usecase
+  element capability {
+    style {
+      border dashed
+    }
+  }
+
+  relationship uses
+  relationship realizes {
+    line dotted
+    color gray
+  }
+  // 'include' and 'extend' are LikeC4 keywords — kinds carry a uc- prefix
+  relationship uc-include {
+    line dashed
+  }
+  relationship uc-extend {
+    line dashed
+  }
+
+  // status-tag vocabulary (metamodel.md)
+  tag built {
+    color #009E73
+  }
+  tag partial {
+    color #E69F00
+  }
+  tag proposed {
+    color #56B4E9
+  }
+  tag deferred {
+    color #999999
+  }
+  tag third-party {
+    color #8A6FC8
+  }
+
+  // roadmap-tag vocabulary (PRD milestones)
+  tag v1 {
+    color #0072B2
+  }
+  tag v1-1 {
+    color #56B4E9
+  }
+  tag v2 {
+    color #D55E00
+  }
+  tag parked {
+    color #999999
+  }
+
+  // status fill colors (light mode)
+  color built-fill #D6F2E9
+  color partial-fill #FBEACC
+  color proposed-fill #DAF0FA
+  color deferred-fill #E8E8E8
+  // roadmap fill colors
+  color v1-fill #D6E9F8
+  color v1-1-fill #DAF0FA
+  color v2-fill #FBE3D6
+  color parked-fill #E8E8E8
+}
